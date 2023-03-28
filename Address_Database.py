@@ -7,7 +7,7 @@ import sqlite3
 from tkinter import messagebox
 from tkinter import ttk
 
-# conn = sqlite3.connect('C:/Users/HP/Pycharm_Projects/tensorEnv/Tkinter_prac/Projects/Address_Database/address_book.db')
+# conn = sqlite3.connect('./address_book.db')
 # c = conn.cursor()
 # conn.commit()
 # conn.close()
