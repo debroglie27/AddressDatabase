@@ -1,17 +1,24 @@
 import os
 import smtplib
+import sqlite3
+from tkinter import *
+from tkinter import ttk
+from tkinter import messagebox
 from pathlib import Path
 from dotenv import load_dotenv
-from tkinter import *
-import sqlite3
-from tkinter import messagebox
-from tkinter import ttk
+from cryptography.fernet import Fernet
 
 # conn = sqlite3.connect('./address_book.db')
 # c = conn.cursor()
+
+# # Use this query in case to know details inside the database
+# query = "SELECT * FROM sqlite_master"
+# c.execute(query)
+# print(c.fetchall())
 # conn.commit()
 # conn.close()
 
+# ADDRESS TABLE
 # c.execute('''CREATE TABLE addresses(
 #           first_name text,
 #           last_name text,
@@ -20,6 +27,15 @@ from tkinter import ttk
 #           state text,
 #           zipcode integer)''')
 
+# USERS TABLE
+# c.execute('''CREATE TABLE users(
+#            Username text PRIMARY KEY,
+#            Password text,
+#            email_id text)''')
+
+# SECRET KEY TABLE
+# c.execute('''CREATE TABLE Secret_Key(secret_key text)''')
+
 # ADMIN: Arijeet
 # Secret Key: 12345
 
@@ -27,6 +43,7 @@ from tkinter import ttk
 # Password = ['1234', '1967', '1969', '1999', '1010', '1998', '007']
 
 
+# 1. Login Window
 class WinLogin:
 
     def __init__(self, master, title):
@@ -71,6 +88,14 @@ class WinLogin:
         self.username_entry.insert(0, "Username")
         self.password_entry.insert(0, "Password")
 
+        # Loading our .env file
+        env_path = Path(env_file_path)
+        load_dotenv(dotenv_path=env_path)
+
+        # Getting the ENCRYPTION_KEY
+        key = os.environ.get('ENCRYPTION_KEY')
+        self.cipher_suite = Fernet(key)
+
     def username_placeholder_vanish(self):
         if self.username_entry.get() == "Username":
             # Deleting the Placeholder and making foreground "black"
@@ -96,12 +121,15 @@ class WinLogin:
             query = 'Select Password, oid from users where Username=?'
             c.execute(query, (username,))
 
-            record, oid = c.fetchone()
+            original_encrypted_password, oid = c.fetchone()
 
             conn.commit()
             conn.close()
 
-            if record == password:
+            # Decrypting original Password
+            original_password = self.cipher_suite.decrypt(original_encrypted_password).decode()
+
+            if password == original_password:
                 self.new_window(WinHome, "Home Window", oid)
             else:
                 messagebox.showerror("Error", "Incorrect!!! Username or Password", parent=self.root)
@@ -120,7 +148,7 @@ class WinLogin:
         self.root.destroy()
 
 
-# Forgot Password Window
+# 2. Forgot Password Window
 class WinForgotPass:
 
     def __init__(self, master, title):
@@ -154,6 +182,10 @@ class WinForgotPass:
         self.EMAIL_ADDRESS = os.environ.get('EMAIL_USER')
         self.EMAIL_PASSWORD = os.environ.get('EMAIL_PASS')
 
+        # Getting the ENCRYPTION_KEY
+        key = os.environ.get('ENCRYPTION_KEY')
+        self.cipher_suite = Fernet(key)
+
     def email_check(self):
         # Displaying Message Informing that it will take time
         messagebox.showinfo("Information", "It may take some time\nPlease Wait!!!", parent=self.root)
@@ -167,21 +199,25 @@ class WinForgotPass:
             query = 'Select Password from users where email_id=?'
             c.execute(query, (email,))
 
-            user_password = c.fetchone()
+            result = c.fetchone()
 
             conn.commit()
             conn.close()
 
-            if user_password is None:
+            if result is None:
                 messagebox.showerror("Error", "Incorrect!!! Email-id", parent=self.root)
             else:
+                encrypted_password = result[0]
+                # Decrypting Encrypted Password
+                user_password = self.cipher_suite.decrypt(encrypted_password).decode()
+
                 try:
                     # Sending Email Code
                     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
                         smtp.login(self.EMAIL_ADDRESS, self.EMAIL_PASSWORD)
 
                         subject = 'Forgot Password: Address Database'
-                        body = f'Dear User\n\nPlease find your Password of your Address Database Account\n\nPassword: {user_password[0]}'
+                        body = f'Dear User\n\nPlease find your Password of your Address Database Account\n\nPassword: {user_password}'
 
                         msg = f'Subject: {subject}\n\n{body}'
 
@@ -206,7 +242,7 @@ class WinForgotPass:
         self.root.destroy()
 
 
-# Window for SignUp
+# 3. Window for SignUp
 class WinSignup:
 
     def __init__(self, master, title):
@@ -250,6 +286,14 @@ class WinSignup:
         self.submit_button = Button(self.root, text="Submit", bg="#90EE90", font=('Helvetica', 11), command=self.signup_check)
         self.submit_button.grid(row=4, column=2, columnspan=2, pady=20, padx=(0, 60), ipadx=4)
 
+        # Loading the Environment Variable from .env file
+        env_path = Path(env_file_path)
+        load_dotenv(dotenv_path=env_path)
+
+        # Getting the ENCRYPTION_KEY
+        key = os.environ.get('ENCRYPTION_KEY')
+        self.cipher_suite = Fernet(key)
+
     def signup_check(self):
         # Storing the values of Entry Boxes
         username = self.username_entry.get()
@@ -269,18 +313,24 @@ class WinSignup:
         # Finding Secret Key
         c.execute('''Select secret_key from Secret_Key''')
 
-        record = c.fetchone()[0]
+        encrypted_secret_key = c.fetchone()[0]
 
-        if not secret_key == record:
+        # Decrypting secret key
+        original_secret_key = self.cipher_suite.decrypt(encrypted_secret_key).decode()
+
+        if not secret_key == original_secret_key:
             messagebox.showerror("Error", "Secret Key Incorrect!!!", parent=self.root)
         else:
+            # Encrypting the given password
+            encrypted_password = self.cipher_suite.encrypt(password.encode())
+
             try:
                 conn = sqlite3.connect(database_file_path)
                 c = conn.cursor()
 
                 # Inserting Details of New User
                 query = "Insert Into users(Username, Password, email_id) values(?, ?, ?)"
-                c.execute(query, (username, password, email_id))
+                c.execute(query, (username, encrypted_password, email_id))
                 conn.commit()
 
                 # Displaying message informing that account was added successfully
@@ -300,6 +350,7 @@ class WinSignup:
         self.root.destroy()
 
 
+# 4. Home Window
 class WinHome:
 
     def __init__(self, master, title, user_oid):
@@ -416,6 +467,7 @@ class WinHome:
         self.root.destroy()
 
 
+# 5. Window for User Details
 class WinUserDetails:
 
     def __init__(self, master, title, user_oid):
@@ -503,6 +555,7 @@ class WinUserDetails:
         self.close_window()
 
 
+# 6. Window for Changing Password
 class WinChangePassword:
 
     def __init__(self, master, title, user_oid):
@@ -545,6 +598,14 @@ class WinChangePassword:
         self.save_button = Button(self.button_frame, text="Save", bg="#90EE90", font=('Helvetica', 11), command=self.change_password)
         self.save_button.grid(row=0, column=1, pady=20, padx=(30, 0), ipadx=5)
 
+        # Loading the Environment Variables from .env file
+        env_path = Path(env_file_path)
+        load_dotenv(dotenv_path=env_path)
+
+        # Getting the ENCRYPTION_KEY
+        key = os.environ.get('ENCRYPTION_KEY')
+        self.cipher_suite = Fernet(key)
+
     def close_window(self):
         level = Tk()
         WinHome(level, "Home Window", self.user_oid)
@@ -568,18 +629,25 @@ class WinChangePassword:
         query = "Select password from users where oid=?"
         c.execute(query, (self.user_oid,))
 
-        record = c.fetchone()[0]
+        encrypted_password = c.fetchone()[0]
 
-        if record != current_password:
+        # Decrypting Encrypted Password
+        original_password = self.cipher_suite.decrypt(encrypted_password).decode()
+
+        if original_password != current_password:
             messagebox.showerror("Error", "Wrong Current Password!!!", parent=self.root)
         else:
             if new_password != confirm_password:
                 messagebox.showerror("Error", "Confirm Password is not same\nas New Password!!!", parent=self.root)
             else:
+                # Encrypting the password
+                encrypted_confirm_password = self.cipher_suite.encrypt(confirm_password.encode())
+
                 query = "update users set password = ? where OID = ?"
-                c.execute(query, (confirm_password, self.user_oid))
+                c.execute(query, (encrypted_confirm_password, self.user_oid))
 
                 conn.commit()
+                conn.close()
 
                 messagebox.showinfo("Information", "Password Changed Successfully!!!", parent=self.root)
 
@@ -589,6 +657,7 @@ class WinChangePassword:
         self.close_window()
 
 
+# 7. Window for All User Details
 class WinAllUserDetails:
 
     def __init__(self, master, title, user_oid):
@@ -707,6 +776,7 @@ class WinAllUserDetails:
             messagebox.showinfo("Information", "Please select a record to remove!!!")
 
 
+# 8. Window for Changing Secret Key
 class WinChangeSecretKey:
 
     def __init__(self, master, title, user_oid):
@@ -753,6 +823,14 @@ class WinChangeSecretKey:
         self.save_button = Button(self.button_frame, text="Save", bg="#90EE90", font=('Helvetica', 11), command=self.change_secret_key)
         self.save_button.grid(row=0, column=1, pady=20, padx=(30, 0), ipadx=5)
 
+        # Loading the Environment Variables from .env file
+        env_path = Path(env_file_path)
+        load_dotenv(dotenv_path=env_path)
+
+        # Getting the ENCRYPTION_KEY
+        key = os.environ.get('ENCRYPTION_KEY')
+        self.cipher_suite = Fernet(key)
+
     def new_window(self, _class, title, oid):
         level = Tk()
         _class(level, title, oid)
@@ -779,9 +857,12 @@ class WinChangeSecretKey:
 
         c.execute('''Select secret_key from Secret_Key''')
 
-        record = c.fetchone()[0]
+        encrypted_secret_key = c.fetchone()[0]
 
-        if record != current_secret_key:
+        # Decrypting secret key
+        original_secret_key = self.cipher_suite.decrypt(encrypted_secret_key).decode()
+
+        if current_secret_key != original_secret_key:
             messagebox.showerror("Error", "Wrong Current Secret Key!!!", parent=self.root)
             return
         else:
@@ -789,8 +870,10 @@ class WinChangeSecretKey:
                 messagebox.showerror("Error", "Confirm Secret Key is not same\nas New Secret Key!!!", parent=self.root)
                 return
             else:
+                encrypted_confirm_secret_key = self.cipher_suite.encrypt(confirm_secret_key.encode())
+
                 query = "update Secret_Key set secret_key = ? where OID = 1"
-                c.execute(query, (confirm_secret_key,))
+                c.execute(query, (encrypted_confirm_secret_key,))
 
                 messagebox.showinfo("Information", "Secret Key Changed Successfully!!!", parent=self.root)
 
@@ -800,6 +883,7 @@ class WinChangeSecretKey:
         self.close_window()
 
 
+# 9. Window for Forgot Secret Key
 class WinForgotSecretKey:
 
     def __init__(self, master, title, user_oid):
@@ -834,6 +918,10 @@ class WinForgotSecretKey:
         self.EMAIL_ADDRESS = os.environ.get('EMAIL_USER')
         self.EMAIL_PASSWORD = os.environ.get('EMAIL_PASS')
 
+        # Getting the ENCRYPTION_KEY
+        key = os.environ.get('ENCRYPTION_KEY')
+        self.cipher_suite = Fernet(key)
+
     def email_check(self):
         messagebox.showinfo("Information", "It may take some time\nPlease Wait!!!", parent=self.root)
         email = self.email_entry.get()
@@ -852,17 +940,21 @@ class WinForgotSecretKey:
             query = 'Select secret_key from Secret_Key where oid=1'
             c.execute(query)
 
-            secret_key = c.fetchone()
+            result = c.fetchone()
 
-            if secret_key is None:
+            if result is None:
                 messagebox.showerror("Error", "Incorrect!!! Email-id", parent=self.root)
             else:
+                encrypted_secret_key = result[0]
+                # Decrypting secret key
+                secret_key = self.cipher_suite.decrypt(encrypted_secret_key).decode()
+
                 try:
                     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
                         smtp.login(self.EMAIL_ADDRESS, self.EMAIL_PASSWORD)
 
                         subject = 'Forgot Secret Key: Address Database'
-                        body = f'Dear User\n\nPlease find the Secret Key of the Address Database Account\n\nSecret Key: {secret_key[0]}'
+                        body = f'Dear User\n\nPlease find the Secret Key of the Address Database Account\n\nSecret Key: {secret_key}'
 
                         msg = f'Subject: {subject}\n\n{body}'
 
@@ -887,6 +979,7 @@ class WinForgotSecretKey:
         self.root.destroy()
 
 
+# 10. Insert Window
 class WinInsert:
 
     def __init__(self, master, title, user_oid):
@@ -965,6 +1058,7 @@ class WinInsert:
         self.root.destroy()
 
 
+# 11. Search Window
 class WinSearch:
 
     def __init__(self, master, title, user_oid):
@@ -1104,6 +1198,7 @@ class WinSearch:
         self.root.destroy()
 
 
+# 12. Update Window
 class WinUpdate:
 
     def __init__(self, master, title, user_oid):
@@ -1226,6 +1321,7 @@ class WinUpdate:
         self.root.destroy()
 
 
+# 13. Delete Window
 class WinDelete:
 
     def __init__(self, master, title, user_oid):
