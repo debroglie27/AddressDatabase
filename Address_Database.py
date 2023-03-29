@@ -74,11 +74,13 @@ class WinLogin:
         self.login_button.grid(row=2, column=0, columnspan=2, pady=20, padx=(35, 0), ipadx=6)
 
         # SignUp Button
-        self.signup_button = Button(self.root, text="SignUp", bg="#add8e6", font=('Helvetica', 11), command=lambda: self.forgot_signup_window(WinSignup, "SignUp Window"))
+        self.signup_button = Button(self.root, text="SignUp", bg="#add8e6", font=('Helvetica', 11),
+                                    command=lambda: self.forgot_signup_window(WinSignup, "SignUp Window"))
         self.signup_button.grid(row=2, column=2, columnspan=2, pady=20, padx=(0, 50), ipadx=6)
 
         # Forgot Password Button
-        self.forgot_pass_button = Button(self.root, text="Forgot Password?", fg="blue", relief=FLAT, command=lambda: self.forgot_signup_window(WinForgotPass, "Forgot Password Window"))
+        self.forgot_pass_button = Button(self.root, text="Forgot Password?", fg="blue", relief=FLAT,
+                                         command=lambda: self.forgot_signup_window(WinForgotPass, "Forgot Password Window"))
         self.forgot_pass_button.grid(row=3, column=1, padx=(0, 30), columnspan=2)
 
         # Placeholder for our Entry Boxes and also giving a message to distinguish
@@ -350,16 +352,21 @@ class WinHome:
         self.root['bg'] = "#90EE90"
         self.root.resizable(width=False, height=False)
 
-        self.head_label = Label(self.root, text="Welcome to Database", fg="purple", bg='#add8e6', bd=4, relief=GROOVE, font=('Monotype Corsiva', 32, "bold"))
+        self.head_label = Label(self.root, text="Welcome to Database", fg="purple", bg='#add8e6', bd=4, relief=GROOVE,
+                                font=('Monotype Corsiva', 32, "bold"))
         self.head_label.pack(pady=(0, 10), ipadx=10, ipady=5)
 
-        self.but_insert = Button(self.root, text="Insert", font=('Helvetica', 15), bg='#fdebd0', command=lambda: self.new_window(WinInsert, "Insert Window", self.user_oid))
+        self.but_insert = Button(self.root, text="Insert", font=('Helvetica', 15), bg='#fdebd0',
+                                 command=lambda: self.new_window(WinInsert, "Insert Window", self.user_oid))
         self.but_insert.pack(pady=(15, 0), ipadx=35)
-        self.but_search = Button(self.root, text="Search", font=('Helvetica', 15), bg='#fdebd0', command=lambda: self.new_window(WinSearch, "Search Window", self.user_oid))
+        self.but_search = Button(self.root, text="Search", font=('Helvetica', 15), bg='#fdebd0',
+                                 command=lambda: self.new_window(WinSearch, "Search Window", self.user_oid))
         self.but_search.pack(pady=(20, 0), ipadx=29)
-        self.but_update = Button(self.root, text="Update", font=('Helvetica', 15), bg='#fdebd0', command=lambda: self.new_window(WinUpdate, "Update Window", self.user_oid))
+        self.but_update = Button(self.root, text="Update", font=('Helvetica', 15), bg='#fdebd0',
+                                 command=lambda: self.new_window(WinUpdate, "Update Window", self.user_oid))
         self.but_update.pack(pady=(20, 0), ipadx=29)
-        self.but_delete = Button(self.root, text="Delete", font=('Helvetica', 15), bg='#fdebd0', command=lambda: self.new_window(WinDelete, "Delete Window", self.user_oid))
+        self.but_delete = Button(self.root, text="Delete", font=('Helvetica', 15), bg='#fdebd0',
+                                 command=lambda: self.new_window(WinDelete, "Delete Window", self.user_oid))
         self.but_delete.pack(pady=(20, 0), ipadx=32)
 
         # Create Menu
@@ -391,8 +398,10 @@ class WinHome:
             self.admin_settings_menu = Menu(self.my_menu, tearoff=False)
             self.my_menu.add_cascade(label="Admin Settings", menu=self.admin_settings_menu)
             # Add Settings Menu Items
-            self.admin_settings_menu.add_command(label="All User Details", command=lambda: self.new_window(WinAllUserDetails, "All User Details", self.user_oid))
-            self.admin_settings_menu.add_command(label="Change Secret Key", command=lambda: self.new_window(WinChangeSecretKey, "Change Secret Key", self.user_oid))
+            self.admin_settings_menu.add_command(label="All User Details",
+                                                 command=lambda: self.new_window(WinAllUserDetails, "All User Details", self.user_oid))
+            self.admin_settings_menu.add_command(label="Change Secret Key",
+                                                 command=lambda: self.new_window(WinChangeSecretKey, "Change Secret Key", self.user_oid))
 
         # Add Right Click Pop Up Menu
         self.my_popup_menu = Menu(self.root, tearoff=False)
@@ -410,8 +419,10 @@ class WinHome:
         # Only for Admin
         if self.user_oid == 1:
             # All User Details and Change Secret Key
-            self.my_popup_menu.add_command(label="All User Details", command=lambda: self.new_window(WinAllUserDetails, "All User Details", self.user_oid))
-            self.my_popup_menu.add_command(label="Change Secret Key", command=lambda: self.new_window(WinChangeSecretKey, "Change Secret Key", self.user_oid))
+            self.my_popup_menu.add_command(label="All User Details",
+                                           command=lambda: self.new_window(WinAllUserDetails, "All User Details", self.user_oid))
+            self.my_popup_menu.add_command(label="Change Secret Key",
+                                           command=lambda: self.new_window(WinChangeSecretKey, "Change Secret Key", self.user_oid))
             self.my_popup_menu.add_separator()
 
         # Logout and Exit
@@ -785,7 +796,8 @@ class WinChangeSecretKey:
         self.current_secret_key_entry.grid(row=0, column=1, padx=10, pady=(30, 10), sticky=W)
 
         # Forgot Secret Key Button
-        self.forgot_secret_key_button = Button(self.root, text="Forgot Secret Key?", fg="blue", relief=FLAT, command=lambda: self.new_window(WinForgotSecretKey, "Forgot Secret Key Window", self.user_oid))
+        self.forgot_secret_key_button = Button(self.root, text="Forgot Secret Key?", fg="blue", relief=FLAT,
+                                               command=lambda: self.new_window(WinForgotSecretKey, "Forgot Secret Key Window", self.user_oid))
         self.forgot_secret_key_button.grid(row=1, column=0, columnspan=2)
         
         # New Password Label and Entry
@@ -876,7 +888,8 @@ class WinForgotSecretKey:
         self.root.resizable(width=False, height=False)
 
         # Instruction Label
-        self.instruction_label = Label(self.root, text="Provide Your Email-id\nwhere Secret Key will be shared.", font=('Helvetica', 13), fg="green")
+        self.instruction_label = Label(self.root, text="Provide Your Email-id\nwhere Secret Key will be shared.",
+                                       font=('Helvetica', 13), fg="green")
         self.instruction_label.grid(row=0, column=0, padx=57, pady=(20, 0), columnspan=4)
 
         # Email Label and Entry
@@ -1051,7 +1064,8 @@ class WinSearch:
         self.search_Entry.grid(row=0, column=1, padx=(0, 20), pady=20)
 
         # Drop Down Box for Search Type
-        self.drop = ttk.Combobox(self.root, values=['Search by...', 'OID', 'First_Name', 'Last_Name', 'Address', 'City', 'State', 'Zipcode'], font=('helvetica', 11))
+        self.drop = ttk.Combobox(self.root, values=['Search by...', 'OID', 'First_Name', 'Last_Name', 'Address', 'City', 'State', 'Zipcode'],
+                                 font=('helvetica', 11))
         self.drop.current(0)
         self.drop.grid(row=0, column=2, padx=(0, 27))
 
@@ -1266,17 +1280,17 @@ class WinUpdate:
     def update(self):
         if self.select_Entry.get() == '':
             messagebox.showwarning("Warning", "Please Select an ID!", parent=self.root)
-        elif (self.f_name.get(), self.l_name.get(), self.address.get(), self.city.get(), self.state.get(), self.zipcode.get()) == ('', '', '', '', '', ''):
+        elif (self.f_name.get(), self.l_name.get(), self.address.get(), self.city.get(),
+              self.state.get(), self.zipcode.get()) == ('', '', '', '', '', ''):
             messagebox.showwarning("Warning", "Please Fill The Details!", parent=self.root)
         else:
             conn = sqlite3.connect(database_file_path)
             c = conn.cursor()
 
-            query = "update addresses set first_name = ?, last_name = ?,\
-                                        address = ?, city = ?, state = ?, zipcode = ?\
-                                        where OID = ?"
-            e = (self.f_name.get(), self.l_name.get(), self.address.get(), self.city.get(), self.state.get(), self.zipcode.get(), self.select_Entry.get())
-            c.execute(query, e)
+            query = "update addresses set first_name = ?, last_name = ?, address = ?, city = ?, state = ?, zipcode = ? where OID = ?"
+            placeholders = (self.f_name.get(), self.l_name.get(), self.address.get(), self.city.get(), self.state.get(),
+                            self.zipcode.get(), self.select_Entry.get())
+            c.execute(query, placeholders)
 
             self.f_name.delete(0, END)
             self.l_name.delete(0, END)
