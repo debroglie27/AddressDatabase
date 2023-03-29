@@ -1,3 +1,6 @@
+# **************** Developed By: ARIJEET DE ******************
+# Last Updated: 29-03-2023
+
 import os
 import smtplib
 import sqlite3
