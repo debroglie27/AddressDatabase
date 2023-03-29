@@ -923,7 +923,7 @@ class WinChangeSecretKey:
                 encrypted_confirm_secret_key = self.cipher_suite.encrypt(confirm_secret_key.encode()).decode()
 
                 os.environ['SECRET_KEY'] = encrypted_confirm_secret_key
-                set_key("./.env", "SECRET_KEY", os.environ["SECRET_KEY"])
+                set_key(env_file_path, "SECRET_KEY", os.environ["SECRET_KEY"])
 
                 messagebox.showinfo("Information", "Secret Key Changed Successfully!!!", parent=self.root)
 
