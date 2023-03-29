@@ -5,7 +5,7 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 from pathlib import Path
-from dotenv import load_dotenv
+from dotenv import load_dotenv, set_key
 from cryptography.fernet import Fernet
 
 # conn = sqlite3.connect('./address_book.db')
@@ -32,9 +32,6 @@ from cryptography.fernet import Fernet
 #            Username text PRIMARY KEY,
 #            Password text,
 #            email_id text)''')
-
-# SECRET KEY TABLE
-# c.execute('''CREATE TABLE Secret_Key(secret_key text)''')
 
 # ADMIN: Arijeet
 # Secret Key: 12345
@@ -121,13 +118,13 @@ class WinLogin:
             query = 'Select Password, oid from users where Username=?'
             c.execute(query, (username,))
 
-            original_encrypted_password, oid = c.fetchone()
+            encrypted_password, oid = c.fetchone()
 
             conn.commit()
             conn.close()
 
             # Decrypting original Password
-            original_password = self.cipher_suite.decrypt(original_encrypted_password).decode()
+            original_password = self.cipher_suite.decrypt(encrypted_password).decode()
 
             if password == original_password:
                 self.new_window(WinHome, "Home Window", oid)
@@ -294,6 +291,9 @@ class WinSignup:
         key = os.environ.get('ENCRYPTION_KEY')
         self.cipher_suite = Fernet(key)
 
+        # Getting the Secret Key
+        self.encrypted_secret_key = os.environ.get('SECRET_KEY')
+
     def signup_check(self):
         # Storing the values of Entry Boxes
         username = self.username_entry.get()
@@ -307,16 +307,8 @@ class WinSignup:
         self.email_entry.delete(0, END)
         self.secret_entry.delete(0, END)
 
-        conn = sqlite3.connect(database_file_path)
-        c = conn.cursor()
-
-        # Finding Secret Key
-        c.execute('''Select secret_key from Secret_Key''')
-
-        encrypted_secret_key = c.fetchone()[0]
-
         # Decrypting secret key
-        original_secret_key = self.cipher_suite.decrypt(encrypted_secret_key).decode()
+        original_secret_key = self.cipher_suite.decrypt(self.encrypted_secret_key).decode()
 
         if not secret_key == original_secret_key:
             messagebox.showerror("Error", "Secret Key Incorrect!!!", parent=self.root)
@@ -338,9 +330,6 @@ class WinSignup:
 
             except sqlite3.SQLITE_ERROR:
                 messagebox.showinfo("Information", "Please Try Again!!!", parent=self.root)
-
-        conn.commit()
-        conn.close()
 
         self.close_window()
 
@@ -831,6 +820,9 @@ class WinChangeSecretKey:
         key = os.environ.get('ENCRYPTION_KEY')
         self.cipher_suite = Fernet(key)
 
+        # Getting the Secret Key
+        self.encrypted_secret_key = os.environ.get('SECRET_KEY')
+
     def new_window(self, _class, title, oid):
         level = Tk()
         _class(level, title, oid)
@@ -852,15 +844,8 @@ class WinChangeSecretKey:
         self.new_secret_key_entry.delete(0, END)
         self.confirm_secret_key_entry.delete(0, END)
 
-        conn = sqlite3.connect(database_file_path)
-        c = conn.cursor()
-
-        c.execute('''Select secret_key from Secret_Key''')
-
-        encrypted_secret_key = c.fetchone()[0]
-
-        # Decrypting secret key
-        original_secret_key = self.cipher_suite.decrypt(encrypted_secret_key).decode()
+        # Decrypting secret key - self.encrypted_secret_key is from the __init__() method
+        original_secret_key = self.cipher_suite.decrypt(self.encrypted_secret_key).decode()
 
         if current_secret_key != original_secret_key:
             messagebox.showerror("Error", "Wrong Current Secret Key!!!", parent=self.root)
@@ -870,15 +855,12 @@ class WinChangeSecretKey:
                 messagebox.showerror("Error", "Confirm Secret Key is not same\nas New Secret Key!!!", parent=self.root)
                 return
             else:
-                encrypted_confirm_secret_key = self.cipher_suite.encrypt(confirm_secret_key.encode())
+                encrypted_confirm_secret_key = self.cipher_suite.encrypt(confirm_secret_key.encode()).decode()
 
-                query = "update Secret_Key set secret_key = ? where OID = 1"
-                c.execute(query, (encrypted_confirm_secret_key,))
+                os.environ['SECRET_KEY'] = encrypted_confirm_secret_key
+                set_key("./.env", "SECRET_KEY", os.environ["SECRET_KEY"])
 
                 messagebox.showinfo("Information", "Secret Key Changed Successfully!!!", parent=self.root)
-
-        conn.commit()
-        conn.close()
 
         self.close_window()
 
@@ -922,6 +904,9 @@ class WinForgotSecretKey:
         key = os.environ.get('ENCRYPTION_KEY')
         self.cipher_suite = Fernet(key)
 
+        # Getting the Secret Key
+        self.encrypted_secret_key = os.environ.get('SECRET_KEY')
+
     def email_check(self):
         messagebox.showinfo("Information", "It may take some time\nPlease Wait!!!", parent=self.root)
         email = self.email_entry.get()
@@ -934,42 +919,33 @@ class WinForgotSecretKey:
 
         oid = c.fetchone()
 
-        if oid is None or oid[0] != 1:
-            messagebox.showerror("Error", "Incorrect!!! Email-id", parent=self.root)
-        else:
-            query = 'Select secret_key from Secret_Key where oid=1'
-            c.execute(query)
-
-            result = c.fetchone()
-
-            if result is None:
-                messagebox.showerror("Error", "Incorrect!!! Email-id", parent=self.root)
-            else:
-                encrypted_secret_key = result[0]
-                # Decrypting secret key
-                secret_key = self.cipher_suite.decrypt(encrypted_secret_key).decode()
-
-                try:
-                    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-                        smtp.login(self.EMAIL_ADDRESS, self.EMAIL_PASSWORD)
-
-                        subject = 'Forgot Secret Key: Address Database'
-                        body = f'Dear User\n\nPlease find the Secret Key of the Address Database Account\n\nSecret Key: {secret_key}'
-
-                        msg = f'Subject: {subject}\n\n{body}'
-
-                        smtp.sendmail(self.EMAIL_ADDRESS, email, msg)
-
-                        messagebox.showinfo("Information", "Mail has been sent Successfully:)", parent=self.root)
-
-                except smtplib.SMTPResponseException as e:
-                    error_code = e.smtp_code
-                    error_message = e.smtp_error
-                    messagebox.showerror(f"Error Code: {error_code}", f"Error Message: {error_message}\nPlease Try Again!",
-                                         parent=self.root)
-
         conn.commit()
         conn.close()
+
+        if oid is None or oid[0] != 1:
+            messagebox.showerror("Error", "Incorrect! Email-id", parent=self.root)
+        else:
+            # Decrypting secret key
+            secret_key = self.cipher_suite.decrypt(self.encrypted_secret_key).decode()
+
+            try:
+                with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+                    smtp.login(self.EMAIL_ADDRESS, self.EMAIL_PASSWORD)
+
+                    subject = 'Forgot Secret Key: Address Database'
+                    body = f'Dear User\n\nPlease find the Secret Key of the Address Database Account\n\nSecret Key: {secret_key}'
+
+                    msg = f'Subject: {subject}\n\n{body}'
+
+                    smtp.sendmail(self.EMAIL_ADDRESS, email, msg)
+
+                    messagebox.showinfo("Information", "Mail has been sent Successfully:)", parent=self.root)
+
+            except smtplib.SMTPResponseException as e:
+                error_code = e.smtp_code
+                error_message = e.smtp_error
+                messagebox.showerror(f"Error Code: {error_code}", f"Error Message: {error_message}\nPlease Try Again!",
+                                     parent=self.root)
 
         self.close_window()
 
