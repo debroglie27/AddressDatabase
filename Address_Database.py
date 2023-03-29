@@ -125,16 +125,17 @@ class WinLogin:
             conn.commit()
             conn.close()
 
-            # Decrypting original Password
-            original_password = self.cipher_suite.decrypt(encrypted_password).decode()
-
-            if password == original_password:
-                self.new_window(WinHome, "Home Window", oid)
-            else:
-                messagebox.showerror("Error", "Incorrect!!! Username or Password", parent=self.root)
-
-        except sqlite3.SQLITE_ERROR:
+        except sqlite3.OperationalError:
             messagebox.showerror("Error", "Please Try Again!", parent=self.root)
+            return
+
+        # Decrypting original Password
+        original_password = self.cipher_suite.decrypt(encrypted_password).decode()
+
+        if password == original_password:
+            self.new_window(WinHome, "Home Window", oid)
+        else:
+            messagebox.showerror("Error", "Incorrect!!! Username or Password", parent=self.root)
 
     def forgot_signup_window(self, _class, title):
         level = Tk()
@@ -203,37 +204,38 @@ class WinForgotPass:
             conn.commit()
             conn.close()
 
-            if result is None:
-                messagebox.showerror("Error", "Incorrect!!! Email-id", parent=self.root)
-            else:
-                encrypted_password = result[0]
-                # Decrypting Encrypted Password
-                user_password = self.cipher_suite.decrypt(encrypted_password).decode()
-
-                try:
-                    # Sending Email Code
-                    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-                        smtp.login(self.EMAIL_ADDRESS, self.EMAIL_PASSWORD)
-
-                        subject = 'Forgot Password: Address Database'
-                        body = f'Dear User\n\nPlease find your Password of your Address Database Account\n\nPassword: {user_password}'
-
-                        msg = f'Subject: {subject}\n\n{body}'
-
-                        smtp.sendmail(self.EMAIL_ADDRESS, email, msg)
-
-                        # Message to inform that Email has been sent
-                        messagebox.showinfo("Information", "Mail has been sent Successfully:)", parent=self.root)
-                        self.close_window()
-
-                except smtplib.SMTPResponseException as e:
-                    error_code = e.smtp_code
-                    error_message = e.smtp_error
-                    messagebox.showerror(f"Error Code: {error_code}", f"Error Message: {error_message}\nPlease Try Again!",
-                                         parent=self.root)
-
-        except sqlite3.SQLITE_ERROR:
+        except sqlite3.OperationalError:
             messagebox.showerror("Error", "Please Try Again!!!", parent=self.root)
+            return
+
+        if result is None:
+            messagebox.showerror("Error", "Incorrect!!! Email-id", parent=self.root)
+        else:
+            encrypted_password = result[0]
+            # Decrypting Encrypted Password
+            user_password = self.cipher_suite.decrypt(encrypted_password).decode()
+
+            try:
+                # Sending Email Code
+                with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+                    smtp.login(self.EMAIL_ADDRESS, self.EMAIL_PASSWORD)
+
+                    subject = 'Forgot Password: Address Database'
+                    body = f'Dear User\n\nPlease find your Password of your Address Database Account\n\nPassword: {user_password}'
+
+                    msg = f'Subject: {subject}\n\n{body}'
+
+                    smtp.sendmail(self.EMAIL_ADDRESS, email, msg)
+
+                    # Message to inform that Email has been sent
+                    messagebox.showinfo("Information", "Mail has been sent Successfully:)", parent=self.root)
+                    self.close_window()
+
+            except smtplib.SMTPResponseException as e:
+                error_code = e.smtp_code
+                error_message = e.smtp_error
+                messagebox.showerror(f"Error Code: {error_code}", f"Error Message: {error_message}\nPlease Try Again!",
+                                     parent=self.root)
 
     def close_window(self):
         level = Tk()
@@ -325,13 +327,17 @@ class WinSignup:
                 # Inserting Details of New User
                 query = "Insert Into users(Username, Password, email_id) values(?, ?, ?)"
                 c.execute(query, (username, encrypted_password, email_id))
+
                 conn.commit()
+                conn.close()
 
                 # Displaying message informing that account was added successfully
                 messagebox.showinfo("Information", "Account Successfully Added!!!", parent=self.root)
 
-            except sqlite3.SQLITE_ERROR:
-                messagebox.showinfo("Information", "Please Try Again!!!", parent=self.root)
+            except sqlite3.IntegrityError:
+                messagebox.showerror("Error", "Username Already Taken!\nPlease Enter Other Username", parent=self.root)
+            except sqlite3.OperationalError:
+                messagebox.showerror("Error", "Please Try Again!!!", parent=self.root)
 
         self.close_window()
 
@@ -445,9 +451,10 @@ class WinHome:
             conn.commit()
             conn.close()
 
-        except sqlite3.SQLITE_ERROR:
-            username = "N/A"
-            messagebox.showinfo("Information", "Please Try Again!!!", parent=self.root)
+        except sqlite3.OperationalError:
+            messagebox.showerror("Error", "Please Try Again!!!", parent=self.root)
+            self.logout(WinLogin, "Login Window")
+            return
 
         # Finding whether our user is an ADMIN or not
         if self.user_oid == 1:
@@ -514,10 +521,10 @@ class WinUserDetails:
             conn.commit()
             conn.close()
 
-        except sqlite3.SQLITE_ERROR:
-            username = "N/A"
-            email = "N/A"
-            messagebox.showinfo("Information", "Please Try Again!!!", parent=self.root)
+        except sqlite3.OperationalError:
+            messagebox.showerror("Error", "Please Try Again!!!", parent=self.root)
+            self.close_window()
+            return
 
         # Displaying Values in Username Entry and Email Entry
         self.username_entry.insert(0, username)
@@ -551,20 +558,27 @@ class WinUserDetails:
             self.email_entry.config(state=NORMAL)
 
     def save_details(self):
-        conn = sqlite3.connect(database_file_path)
-        c = conn.cursor()
+        try:
+            conn = sqlite3.connect(database_file_path)
+            c = conn.cursor()
 
-        # Updating the database with new values
-        query = "update users set Username = ?, Email_id = ? where OID = ?"
-        e = (self.username_entry.get(), self.email_entry.get(), self.user_oid)
-        c.execute(query, e)
+            # Updating the database with new values
+            query = "update users set Username = ?, Email_id = ? where OID = ?"
+            e = (self.username_entry.get(), self.email_entry.get(), self.user_oid)
+            c.execute(query, e)
 
-        conn.commit()
-        conn.close()
+            conn.commit()
+            conn.close()
 
-        # Message Informing Successful Saving
-        messagebox.showinfo("Information", "Successfully Saved", parent=self.root)
-        self.close_window()
+            # Message Informing Successful Saving
+            messagebox.showinfo("Information", "Successfully Saved", parent=self.root)
+
+            self.close_window()
+
+        except sqlite3.IntegrityError:
+            messagebox.showerror("Error", "Username Already Taken!\nPlease Enter Other Username", parent=self.root)
+        except sqlite3.OperationalError:
+            messagebox.showerror("Error", "Please Try Again!!!", parent=self.root)
 
 
 # 6. Window for Changing Password
@@ -634,17 +648,25 @@ class WinChangePassword:
         self.new_password_entry.delete(0, END)
         self.confirm_password_entry.delete(0, END)
 
-        conn = sqlite3.connect(database_file_path)
-        c = conn.cursor()
+        try:
+            conn = sqlite3.connect(database_file_path)
+            c = conn.cursor()
 
-        # Finding password the given user
-        query = "Select password from users where oid=?"
-        c.execute(query, (self.user_oid,))
+            # Finding password for the given user
+            query = "Select password from users where oid=?"
+            c.execute(query, (self.user_oid,))
 
-        encrypted_password = c.fetchone()[0]
+            encrypted_password = c.fetchone()[0]
 
-        # Decrypting Encrypted Password
-        original_password = self.cipher_suite.decrypt(encrypted_password).decode()
+            conn.commit()
+            conn.close()
+
+            # Decrypting Encrypted Password
+            original_password = self.cipher_suite.decrypt(encrypted_password).decode()
+
+        except sqlite3.OperationalError:
+            messagebox.showerror("Error", "Please Try Again!!!", parent=self.root)
+            return
 
         if original_password != current_password:
             messagebox.showerror("Error", "Wrong Current Password!!!", parent=self.root)
@@ -655,16 +677,21 @@ class WinChangePassword:
                 # Encrypting the password
                 encrypted_confirm_password = self.cipher_suite.encrypt(confirm_password.encode())
 
-                query = "update users set password = ? where OID = ?"
-                c.execute(query, (encrypted_confirm_password, self.user_oid))
+                try:
+                    conn = sqlite3.connect(database_file_path)
+                    c = conn.cursor()
 
-                conn.commit()
-                conn.close()
+                    # Update password for the particular user_oid
+                    query = "update users set password = ? where OID = ?"
+                    c.execute(query, (encrypted_confirm_password, self.user_oid))
 
-                messagebox.showinfo("Information", "Password Changed Successfully!!!", parent=self.root)
+                    conn.commit()
+                    conn.close()
 
-        conn.commit()
-        conn.close()
+                    messagebox.showinfo("Information", "Password Changed Successfully!!!", parent=self.root)
+
+                except sqlite3.OperationalError:
+                    messagebox.showerror("Error", "Please Try Again!!!", parent=self.root)
 
         self.close_window()
 
@@ -730,14 +757,20 @@ class WinAllUserDetails:
         self.my_tree.tag_configure('oddrow', background="white")
         self.my_tree.tag_configure('evenrow', background="lightblue")
 
-        conn = sqlite3.connect(database_file_path)
-        c = conn.cursor()
+        try:
+            conn = sqlite3.connect(database_file_path)
+            c = conn.cursor()
 
-        c.execute("Select OID, Username, Email_id from users where oid <> 1")
-        records = c.fetchall()
+            c.execute("Select OID, Username, Email_id from users where oid <> 1")
+            records = c.fetchall()
 
-        conn.commit()
-        conn.close()
+            conn.commit()
+            conn.close()
+
+        except sqlite3.OperationalError:
+            messagebox.showerror("Error", "Please Try Again!!!", parent=self.root)
+            self.close_window()
+            return
 
         # Resetting the Count
         self.count = 0
@@ -772,13 +805,18 @@ class WinAllUserDetails:
                 # Getting the OID from the record
                 oid = self.my_tree.item(record)['values'][0]
 
-                conn = sqlite3.connect(database_file_path)
-                c = conn.cursor()
+                try:
+                    conn = sqlite3.connect(database_file_path)
+                    c = conn.cursor()
 
-                c.execute("Delete from users where oid=?", (oid, ))
+                    c.execute("Delete from users where oid=?", (oid, ))
 
-                conn.commit()
-                conn.close()
+                    conn.commit()
+                    conn.close()
+
+                except sqlite3.OperationalError:
+                    messagebox.showerror("Error", "Please Try Again!!!", parent=self.root)
+                    return
 
                 # removing the record from the treeview
                 self.my_tree.delete(record)
@@ -936,16 +974,21 @@ class WinForgotSecretKey:
         messagebox.showinfo("Information", "It may take some time\nPlease Wait!!!", parent=self.root)
         email = self.email_entry.get()
 
-        conn = sqlite3.connect(database_file_path)
-        c = conn.cursor()
+        try:
+            conn = sqlite3.connect(database_file_path)
+            c = conn.cursor()
 
-        query = 'select oid from users where email_id=?'
-        c.execute(query, (email, ))
+            query = 'select oid from users where email_id=?'
+            c.execute(query, (email, ))
 
-        oid = c.fetchone()
+            oid = c.fetchone()
 
-        conn.commit()
-        conn.close()
+            conn.commit()
+            conn.close()
+
+        except sqlite3.OperationalError:
+            messagebox.showerror("Error", "Please Try Again!!!", parent=self.root)
+            return
 
         if oid is None or oid[0] != 1:
             messagebox.showerror("Error", "Incorrect! Email-id", parent=self.root)
@@ -1034,12 +1077,19 @@ class WinInsert:
         if self.f_name.get() == self.l_name.get() == self.address.get() == self.city.get() == self.state.get() == self.zipcode.get() == '':
             messagebox.showwarning("Warning", "Please Fill The Details!", parent=self.root)
         else:
-            conn = sqlite3.connect(database_file_path)
-            c = conn.cursor()
+            try:
+                conn = sqlite3.connect(database_file_path)
+                c = conn.cursor()
 
-            query = "Insert Into addresses(first_name, last_name, address, city, state, zipcode) values(?, ?, ?, ?, ?, ?)"
+                query = "Insert Into addresses(first_name, last_name, address, city, state, zipcode) values(?, ?, ?, ?, ?, ?)"
+                c.execute(query, (self.f_name.get(), self.l_name.get(), self.address.get(), self.city.get(), self.state.get(), self.zipcode.get()))
 
-            c.execute(query, (self.f_name.get(), self.l_name.get(), self.address.get(), self.city.get(), self.state.get(), self.zipcode.get()))
+                conn.commit()
+                conn.close()
+
+            except sqlite3.OperationalError:
+                messagebox.showerror("Error", "Please Try Again!!!", parent=self.root)
+                return
 
             self.f_name.delete(0, END)
             self.l_name.delete(0, END)
@@ -1049,9 +1099,6 @@ class WinInsert:
             self.zipcode.delete(0, END)
 
             messagebox.showinfo("Information", "Successfully Inserted", parent=self.root)
-
-            conn.commit()
-            conn.close()
 
     def close_window(self):
         level = Tk()
@@ -1084,9 +1131,9 @@ class WinSearch:
         # Buttons
         self.back_button = Button(self.root, text="Back", bg="#add8e6", font=('Helvetica', 11), command=self.close_window)
         self.back_button.grid(row=1, column=0, padx=(55, 0), pady=15, ipadx=5)
-        self.search_button = Button(self.root, text="Search", bg="#90EE90", font=('Helvetica', 11), command=lambda: self.show(1))
+        self.search_button = Button(self.root, text="Search", bg="#90EE90", font=('Helvetica', 11), command=lambda: self.display())
         self.search_button.grid(row=1, column=1, pady=15, ipadx=5)
-        self.show_all_button = Button(self.root, text="Show All", bg="orange", font=('Helvetica', 11), command=lambda: self.show(0))
+        self.show_all_button = Button(self.root, text="Show All", bg="orange", font=('Helvetica', 11), command=lambda: self.display(True))
         self.show_all_button.grid(row=1, column=2, padx=(15, 20), pady=15, ipadx=5)
 
         # Add some style
@@ -1148,27 +1195,35 @@ class WinSearch:
         self.my_tree.tag_configure('oddrow', background="white")
         self.my_tree.tag_configure('evenrow', background="lightblue")
 
-    def show(self, a):
-        if self.search_Entry.get() == "" and a == 1:
+    def display(self, display_all=False):
+        if self.search_Entry.get() == "" and not display_all:
             messagebox.showwarning("Warning", "Please Provide the Value to be Searched", parent=self.root)
             return
 
         selection = self.drop.get()
-        if selection == 'Search by...' and a == 1:
+        if selection == 'Search by...' and not display_all:
             messagebox.showwarning("Warning", "Please Select an Option to be Searched!!!", parent=self.root)
             return
 
-        conn = sqlite3.connect(database_file_path)
-        c = conn.cursor()
+        try:
+            conn = sqlite3.connect(database_file_path)
+            c = conn.cursor()
 
-        if a == 0:
-            c.execute("Select OID, * from addresses")
-        else:
-            query = "select OID, * from addresses where " + selection + " LIKE ?"
-            value = '%'+self.search_Entry.get()+'%'
-            c.execute(query, (value,))
+            if display_all:
+                c.execute("Select OID, * from addresses")
+            else:
+                query = "select OID, * from addresses where " + selection + " LIKE ?"
+                value = '%'+self.search_Entry.get()+'%'
+                c.execute(query, (value,))
 
-        records = c.fetchall()
+            records = c.fetchall()
+
+            conn.commit()
+            conn.close()
+
+        except sqlite3.OperationalError:
+            messagebox.showerror("Error", "Please Try Again!!!", parent=self.root)
+            return
 
         # Removing the Preexisting Records(if any)
         for rec in self.my_tree.get_children():
@@ -1190,9 +1245,6 @@ class WinSearch:
         # Clearing the Entry Box and Resetting the Drop-Down Box
         self.search_Entry.delete(0, END)
         self.drop.current(0)
-
-        conn.commit()
-        conn.close()
 
     def close_window(self):
         level = Tk()
@@ -1268,15 +1320,22 @@ class WinUpdate:
 
         if self.select_Entry.get() == '':
             messagebox.showwarning("Warning", "Please Select an ID!", parent=self.root)
-
         else:
-            conn = sqlite3.connect(database_file_path)
-            c = conn.cursor()
+            try:
+                conn = sqlite3.connect(database_file_path)
+                c = conn.cursor()
 
-            c.execute("Select * from addresses where OID=?", self.select_Entry.get())
-            record = c.fetchone()
+                c.execute("Select * from addresses where OID=?", self.select_Entry.get())
+                record = c.fetchone()
 
-            if not record:
+                conn.commit()
+                conn.close()
+
+            except sqlite3.OperationalError:
+                messagebox.showerror("Error", "Please Try Again!!!", parent=self.root)
+                return
+
+            if record is None:
                 messagebox.showinfo("Information", "No Record Found!", parent=self.root)
             else:
                 self.f_name.insert(0, record[0])
@@ -1286,9 +1345,6 @@ class WinUpdate:
                 self.state.insert(0, record[4])
                 self.zipcode.insert(0, record[5])
 
-            conn.commit()
-            conn.close()
-
     def update(self):
         if self.select_Entry.get() == '':
             messagebox.showwarning("Warning", "Please Select an ID!", parent=self.root)
@@ -1296,13 +1352,21 @@ class WinUpdate:
               self.state.get(), self.zipcode.get()) == ('', '', '', '', '', ''):
             messagebox.showwarning("Warning", "Please Fill The Details!", parent=self.root)
         else:
-            conn = sqlite3.connect(database_file_path)
-            c = conn.cursor()
+            try:
+                conn = sqlite3.connect(database_file_path)
+                c = conn.cursor()
 
-            query = "update addresses set first_name = ?, last_name = ?, address = ?, city = ?, state = ?, zipcode = ? where OID = ?"
-            placeholders = (self.f_name.get(), self.l_name.get(), self.address.get(), self.city.get(), self.state.get(),
-                            self.zipcode.get(), self.select_Entry.get())
-            c.execute(query, placeholders)
+                query = "update addresses set first_name = ?, last_name = ?, address = ?, city = ?, state = ?, zipcode = ? where OID = ?"
+                placeholders = (self.f_name.get(), self.l_name.get(), self.address.get(), self.city.get(), self.state.get(),
+                                self.zipcode.get(), self.select_Entry.get())
+                c.execute(query, placeholders)
+
+                conn.commit()
+                conn.close()
+
+            except sqlite3.OperationalError:
+                messagebox.showerror("Error", "Please Try Again!!!", parent=self.root)
+                return
 
             self.f_name.delete(0, END)
             self.l_name.delete(0, END)
@@ -1313,9 +1377,6 @@ class WinUpdate:
             self.select_Entry.delete(0, END)
 
             messagebox.showinfo("Information", "Successfully Updated", parent=self.root)
-
-            conn.commit()
-            conn.close()
 
     def close_window(self):
         level = Tk()
@@ -1347,24 +1408,43 @@ class WinDelete:
         if self.select_Entry.get() == '':
             messagebox.showwarning("Warning", "Please Select an ID!", parent=self.root)
         else:
-            conn = sqlite3.connect(database_file_path)
-            c = conn.cursor()
+            try:
+                conn = sqlite3.connect(database_file_path)
+                c = conn.cursor()
 
-            query1 = "Select * from addresses where oid=?"
-            c.execute(query1, (self.select_Entry.get(),))
+                # Selecting address record for the given oid
+                query1 = "Select * from addresses where oid=?"
+                c.execute(query1, (self.select_Entry.get(),))
 
-            if c.fetchone() is None:
+                record = c.fetchone()
+
+                conn.commit()
+                conn.close()
+
+            except sqlite3.OperationalError:
+                messagebox.showerror("Error", "Please Try Again!!!", parent=self.root)
+                return
+
+            if record is None:
                 messagebox.showerror("Error", "No Record Found to Delete\nPlease Try Again!!!", parent=self.root)
             else:
-                query2 = "Delete from addresses where oid=?"
-                c.execute(query2, (self.select_Entry.get(),))
+                try:
+                    conn = sqlite3.connect(database_file_path)
+                    c = conn.cursor()
+
+                    query2 = "Delete from addresses where oid=?"
+                    c.execute(query2, (self.select_Entry.get(),))
+
+                    conn.commit()
+                    conn.close()
+
+                except sqlite3.OperationalError:
+                    messagebox.showerror("Error", "Please Try Again!!!", parent=self.root)
+                    return
 
                 self.select_Entry.delete(0, END)
 
                 messagebox.showinfo("Information", "Successfully Deleted", parent=self.root)
-
-            conn.commit()
-            conn.close()
 
     def close_window(self):
         level = Tk()
