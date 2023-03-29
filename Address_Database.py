@@ -432,16 +432,22 @@ class WinHome:
         # Binding the Right click Pop Up Menu
         self.root.bind("<Button-3>", self.my_popup)
 
-        # Finding Username for our Status Bar
-        conn = sqlite3.connect(database_file_path)
-        c = conn.cursor()
-        query = 'Select Username from users where OID=?'
-        c.execute(query, (self.user_oid,))
+        try:
+            conn = sqlite3.connect(database_file_path)
+            c = conn.cursor()
 
-        username = c.fetchone()[0]
+            # Finding Username for our Status Bar
+            query = 'Select Username from users where OID=?'
+            c.execute(query, (self.user_oid,))
 
-        conn.commit()
-        conn.close()
+            username = c.fetchone()[0]
+
+            conn.commit()
+            conn.close()
+
+        except sqlite3.SQLITE_ERROR:
+            username = "N/A"
+            messagebox.showinfo("Information", "Please Try Again!!!", parent=self.root)
 
         # Finding whether our user is an ADMIN or not
         if self.user_oid == 1:
@@ -495,17 +501,23 @@ class WinUserDetails:
         self.change_button2 = Button(self.root, text="Change", font=('Helvetica', 10), bg="orange", command=lambda: self.change_entry(1))
         self.change_button2.grid(row=1, column=2, padx=5, pady=20)
 
-        conn = sqlite3.connect(database_file_path)
-        c = conn.cursor()
+        try:
+            conn = sqlite3.connect(database_file_path)
+            c = conn.cursor()
 
-        # Finding Details of User
-        query = 'Select Username, Email_id from users where OID=?'
-        c.execute(query, (self.user_oid,))
+            # Finding Details of User
+            query = 'Select Username, Email_id from users where OID=?'
+            c.execute(query, (self.user_oid,))
 
-        username, email = c.fetchone()
+            username, email = c.fetchone()
 
-        conn.commit()
-        conn.close()
+            conn.commit()
+            conn.close()
+
+        except sqlite3.SQLITE_ERROR:
+            username = "N/A"
+            email = "N/A"
+            messagebox.showinfo("Information", "Please Try Again!!!", parent=self.root)
 
         # Displaying Values in Username Entry and Email Entry
         self.username_entry.insert(0, username)
