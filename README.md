@@ -27,7 +27,7 @@ so that not anyone can come and make account and access anything.
 
 If Incorrect Secret Key is provided then an Error message will be displayed.
 
-![SignUp Window](https://raw.githubusercontent.com/debroglie27/tensorEnv/main/Tkinter_prac/Projects/SE_Lab_Project9/FrontEnd_Images/SignUp.png)
+![SignUp Window](https://raw.githubusercontent.com/debroglie27/AddressDatabase/main/UI_Images/SignUp.png)
 
 **Submit Button:** After filling the details clicking here will create your account.  
 **Back Button:** Clicking here will allow us to go back to *"Login Window"*.
@@ -39,9 +39,7 @@ our account, and our Password will be sent to that Email_ID.
 
 If Incorrect Email_ID is provided then an Error Message is displayed.
 
-`Note: Gmail and Yahoo are links for quick access of email accounts`
-
-![Forgot Password Window](https://raw.githubusercontent.com/debroglie27/tensorEnv/main/Tkinter_prac/Projects/SE_Lab_Project9/FrontEnd_Images/Forgot_Password.png)
+![Forgot Password Window](https://raw.githubusercontent.com/debroglie27/AddressDatabase/main/UI_Images/Forgot_Password.png)
 
 **Send Button:** After providing the Email_ID, clicking will send our password to our Email_ID.  
 **Back Button:** Clicking here will allow us to go back to *"Login Window"*
