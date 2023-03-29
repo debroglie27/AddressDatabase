@@ -1,11 +1,15 @@
 ## Welcome to "Address Database":
-The Project creates a Graphical User Interface to store, retrieve and maintain addresses in a Database.
+The Project creates a Graphical User Interface to store, retrieve and maintain addresses in a Database.  
+Login feature is added so that only specific people can access the addresses.  
+There is also an ADMIN which manages all the users and makes sure who gets the access.  
+The passwords are encrypted to ensure security and in case of forgetting passwords,   
+it can be retrieved by the users through email.
 
-### Python Libraries:
+### Python Libraries Used:
 * **tkinter:** To create the Graphical User Interface.  
 * **sqlite3:** For the Database functionality.  
 * **cryptography:** To Encrypt the Passwords.
-* **smtplib:** To send Emails in case of forgetting passwords.
+* **smtplib:** To send Emails in case of forget password.
 * **os**, **pathlib** and **dotenv**: For accessing the .env file.
 
 ---
@@ -52,7 +56,7 @@ Settings Menu and Admin Settings(Only for Admin).
 
 Below we have the Status Bar displaying the current User.
 
-![Home Window](https://raw.githubusercontent.com/debroglie27/tensorEnv/main/Tkinter_prac/Projects/SE_Lab_Project9/FrontEnd_Images/Home.png)
+![Home Window](https://raw.githubusercontent.com/debroglie27/AddressDatabase/main/UI_Images/Home.png)
 
 **Machine Button:** Opens the *"Machine Window"* and gives access to the Machine Database.  
 **Adjuster Button:** Opens the *"Adjuster Window"* and gives access to the Adjuster Database.  
@@ -66,19 +70,19 @@ Below we have the Status Bar displaying the current User.
 * Exit: Closes the Program.
 
 **Setting Menu:**
-* User Details: Opens *"The User Details Window"*.
-* Change Password: Opens *"The Change Password Window"*.
+* User Details: Opens the *"User Details Window"*.
+* Change Password: Opens the *"Change Password Window"*.
 
 **Admin Settings Menu:**
-* All User Details: Opens *"The All User Details Window"*.
-* Change Secret Key: Opens *"The Change Secret Key Window"*.
+* All User Details: Opens the *"All User Details Window"*.
+* Change Secret Key: Opens the *"Change Secret Key Window"*.
 
 ---
 ### User Details Window:
 This Window displays the details of the Current User and allows  
 the User to change the details. 
 
-![User Details Window](https://raw.githubusercontent.com/debroglie27/tensorEnv/main/Tkinter_prac/Projects/SE_Lab_Project9/FrontEnd_Images/User_Details.png)
+![User Details Window](https://raw.githubusercontent.com/debroglie27/AddressDatabase/main/UI_Images/User_Details.png)
 
 **Change Button:** Allows the User to edit his/her details.  
 **Save Button:** Allows the User to Save the changes made.  
@@ -94,7 +98,7 @@ An Error Message will be displayed if the User does not type
 the correct Current Password or the New Password and Confirm   
 Password does not match.
 
-![Change Password Window](https://raw.githubusercontent.com/debroglie27/tensorEnv/main/Tkinter_prac/Projects/SE_Lab_Project9/FrontEnd_Images/Change_Password.png)
+![Change Password Window](https://raw.githubusercontent.com/debroglie27/AddressDatabase/main/UI_Images/Change_Password.png)
 
 **Save Button:** Changes the User's Password  
 **Back Button:** Takes the User back to *"Home Window"*.
@@ -104,7 +108,7 @@ Password does not match.
 This Window is accessible only to the Admin and here the Admin  
 can see the details of all the Users having account.
 
-![All User Details Window](https://raw.githubusercontent.com/debroglie27/tensorEnv/main/Tkinter_prac/Projects/SE_Lab_Project9/FrontEnd_Images/All_User_Details.png)
+![All User Details Window](https://raw.githubusercontent.com/debroglie27/AddressDatabase/main/UI_Images/All_User_Details.png)
 
 **Remove Button:** After selecting a particular User, allows the Admin to remove that particular User.  
 **Back Button:** Takes the User back to *"Home Window"*.
@@ -120,9 +124,9 @@ An Error Message will be displayed if the Admin does not type
 the correct Current Secret Key or the New Secret Key and Confirm   
 Secret Key does not match.
 
-![Change Secret Key Window](https://raw.githubusercontent.com/debroglie27/tensorEnv/main/Tkinter_prac/Projects/SE_Lab_Project9/FrontEnd_Images/Change_Secret_Key.png)
+![Change Secret Key Window](https://raw.githubusercontent.com/debroglie27/AddressDatabase/main/UI_Images/Change_Secret_Key.png)
 
-**Forgot Secret key Button:** Opens *"Forgot Secret Key Window"*  
+**Forgot Secret key Button:** Opens the *"Forgot Secret Key Window"*  
 **Save Button:** Changes the Secret Key  
 **Back Button:** Takes the User back to *"Home Window"*.
 
@@ -133,174 +137,63 @@ created his/her account, and the Secret Key will be sent to that Email_ID.
 
 If Incorrect Email_ID is provided then an Error Message is displayed.
 
-`Note: Gmail and Yahoo are links for quick access of email accounts`
+![Forgot Secret Key Window](https://raw.githubusercontent.com/debroglie27/AddressDatabase/main/UI_Images/Forgot_Secret_Key.png)
 
-![Forgot Secret Key Window](https://raw.githubusercontent.com/debroglie27/tensorEnv/main/Tkinter_prac/Projects/SE_Lab_Project9/FrontEnd_Images/Forgot_Secret_Key.png)
-
-**Send Button:** After providing the Email_ID, clicking will send the Secret Key to Admin's Email_ID.  
+**Send Button:** After providing the Email_ID, clicking will send the Secret Key to Admins Email_ID.  
 **Back Button:** Clicking here will allow us to go back to *"Change Secret Key Window"*
 
 ---
-### Machine Window:
-This Window allows the User to manipulate the Machine Table.  
-The User can Insert, Search, Update and Delete records.
-
-![Machine Window](https://raw.githubusercontent.com/debroglie27/tensorEnv/main/Tkinter_prac/Projects/SE_Lab_Project9/FrontEnd_Images/Machine.png)
-
-**Insert Button:** Opens *"Machine Insert Window"*  
-**Search Button:** Opens *"Machine Search Window"*  
-**Update Button:** Opens *"Machine Update Window"*  
-**Delete Button:** Opens *"Machine Delete Window"*  
-**Back Button:** Takes the User back to *"Home Window"*.
-
----
-### Adjuster Window:
-This Window allows the User to manipulate the Adjuster Table.  
-The User can Insert, Search, Update and Delete records.
-
-![Adjuster Window](https://raw.githubusercontent.com/debroglie27/tensorEnv/main/Tkinter_prac/Projects/SE_Lab_Project9/FrontEnd_Images/Adjuster.png)
-
-**Insert Button:** Opens *"Adjuster Insert Window"*  
-**Search Button:** Opens *"Adjuster Search Window"*  
-**Update Button:** Opens *"Adjuster Update Window"*  
-**Delete Button:** Opens *"Adjuster Delete Window"*  
-**Back Button:** Takes the User back to *"Home Window"*.
-
----
-### Maintenance Window:
-This Window allows the User to view the Maintenance Table.
-Here the User can view which Machine is under maintenance and is  
-being fixed by which Adjuster.
-
-![Maintenance Window](https://raw.githubusercontent.com/debroglie27/tensorEnv/main/Tkinter_prac/Projects/SE_Lab_Project9/FrontEnd_Images/Maintenance.png)
-
-**Back Button:** Takes the User back to *"Home Window"*.
-
----
-### Machine Insert Window:
-This Window lets us Insert Data into the Machine Table.  
+### Insert Window:
+This Window lets us Insert Data into the **addresses** Table.  
 The User fill in the details and click the submit button to  
 add the record inside the table.
 
-![Machine Insert Window](https://raw.githubusercontent.com/debroglie27/tensorEnv/main/Tkinter_prac/Projects/SE_Lab_Project9/FrontEnd_Images/Machine_Insert.png)
+![Insert Window](https://raw.githubusercontent.com/debroglie27/AddressDatabase/main/UI_Images/Insert.png)
 
-**Submit Button:** Inserts the Data filled into the Machine Table.  
-**Back Button:** Takes the User back to *"Machine Window"*.
+**Submit Button:** Inserts the Data filled into the **addresses** Table.  
+**Back Button:** Takes the User back to *"Home Window"*.
 
 ---
-### Machine Search Window:
-This Window allows the User to search for a particular Machine.  
+### Search Window:
+This Window allows the User to search for a particular Address.  
 We have to first select the *Search by* option, then type the  
 search value and finally click on the *Search Button* to display  
-searched Machine.
+searched Address record or records.
 
-We can also display everything inside the Machine Table by Clicking  
+We can also display everything inside the **addresses** Table by Clicking  
 the *Show All Button*.
 
-Finally, we can change status of Machine by selecting the particular  
-record and pressing the *Change Status Button*.
-
-![Machine Search Window](https://raw.githubusercontent.com/debroglie27/tensorEnv/main/Tkinter_prac/Projects/SE_Lab_Project9/FrontEnd_Images/Machine_Search.png)
+![Search Window](https://raw.githubusercontent.com/debroglie27/AddressDatabase/main/UI_Images/Search.png)
 
 **Search Button:** Allows us to make searches based on our search value.  
-**Show All Button:** Displays every record in Machine Table.  
-**Change Status Button:** Changes the Status of the Machine which was selected.  
-* If status -> *Working*: then **Change Status Button** will make the status *Failure*.
-* If status -> *Failure*: then **Change Status Button** will make the status *Working*.
-* If status -> *U/M*: then **Change Status Button** will have no effect.
-
-**Back Button:** Takes the User back to *"Machine Window"*.
+**Show All Button:** Displays every record in **addresses** Table.
+**Back Button:** Takes the User back to *"Home Window"*.
 
 ---
-### Machine Update Window:
-This Window allows the User to Update a record in the Machine Table.  
+### Update Window:
+This Window allows the User to Update a record in the **addresses** Table.  
 We first type in the OID of the record which we are interested in  
 updating, then we press the *Show Button* to display the details.
 
 Now we can update the record by editing the Entry Fields.   
 Finally, pressing the *Update Button* will update the record.
 
-![Machine Update Window](https://raw.githubusercontent.com/debroglie27/tensorEnv/main/Tkinter_prac/Projects/SE_Lab_Project9/FrontEnd_Images/Machine_Update.png)
+![Update Window](https://raw.githubusercontent.com/debroglie27/AddressDatabase/main/UI_Images/Update.png)
 
 **Show Button:** Displays the record details for the corresponding OID value provided.  
 **Update Button:** Updates the record.   
-**Back Button:** Takes the User back to *"Machine Window"*.
+**Back Button:** Takes the User back to *"Home Window"*.
 
 ---
-### Machine Delete Window:
-This Window allows the User to Delete a record in the Machine Table.  
-The User provides the Machine_ID value for the record to be Deleted and  
+### Delete Window:
+This Window allows the User to Delete a record in the **addresses** Table.  
+The User provides the OID value for the record to be Deleted and  
 pressing the *Delete Button* deletes the record.
 
-![Machine Delete Window](https://raw.githubusercontent.com/debroglie27/tensorEnv/main/Tkinter_prac/Projects/SE_Lab_Project9/FrontEnd_Images/Machine_Delete.png)
+![Delete Window](https://raw.githubusercontent.com/debroglie27/AddressDatabase/main/UI_Images/Machine_Delete.png)
 
 **Delete Button:** Deletes the record for which OID was provided.  
-**Back Button:** Takes the User back to *"Machine Window"*.
-
----
-### Adjuster Insert Window:
-This Window lets us Insert Data into the Adjuster Table.  
-The User fill in the details and click the submit button to  
-add the record inside the table.
-
-![Adjuster Insert Window](https://raw.githubusercontent.com/debroglie27/tensorEnv/main/Tkinter_prac/Projects/SE_Lab_Project9/FrontEnd_Images/Adjuster_Insert.png)
-
-**Submit Button:** Inserts the Data filled into the Adjuster Table.  
-**Back Button:** Takes the User back to *"Adjuster Window"*.
-
----
-### Adjuster Search Window:
-This Window allows the User to search for a particular Adjuster.  
-We have to first select the *Search by* option, then type the  
-search value and finally click on the *Search Button* to display  
-searched Adjuster.
-
-We can also display everything inside the Adjuster Table by Clicking  
-the *Show All Button*.
-
-Finally, we can change status of Adjuster by selecting the particular  
-record and pressing the *Change Status Button*.  
-Firstly, status will change to "Busy" only when there is a Machine with Status   
-"Failure", and the Machine Type and Adjuster Expertise should match. Secondly,    
-status will change to "Idle" if initially it was "Busy".
-
-![Adjuster Search Window](https://raw.githubusercontent.com/debroglie27/tensorEnv/main/Tkinter_prac/Projects/SE_Lab_Project9/FrontEnd_Images/Adjuster_Search.png)
-
-**Search Button:** Allows us to make searches based on our search value.  
-**Show All Button:** Displays every record in Adjuster Table.  
-**Change Status Button:** Changes the Status of the Adjuster which was selected.  
-* If status -> *Idle*: then **Change Status Button** will make the status *Busy* if  
-there is a machine to be fixed.
-* If status -> *Busy*: then **Change Status Button** will make the status *Idle*  
-and also increment the *nFixes* column by 1.
-
-**Back Button:** Takes the User back to *"Adjuster Window"*.
-
----
-### Adjuster Update Window:
-This Window allows the User to Update a record in the Adjuster Table.  
-We first type in the OID of the record which we are interested in  
-updating, then we press the *Show Button* to display the details.
-
-Now we can update the record by editing the Entry Fields.   
-Finally, pressing the *Update Button* will update the record.
-
-![Adjuster Update Window](https://raw.githubusercontent.com/debroglie27/tensorEnv/main/Tkinter_prac/Projects/SE_Lab_Project9/FrontEnd_Images/Adjuster_Update.png)
-
-**Show Button:** Displays the record details for the corresponding OID value provided.  
-**Update Button:** Updates the record.   
-**Back Button:** Takes the User back to *"Adjuster Window"*.
-
----
-### Adjuster Delete Window:
-This Window allows the User to Delete a record in the Adjuster Table.  
-The User provides the Adjuster_ID value for the record to be Deleted and  
-pressing the *Delete Button* deletes the record.
-
-![Adjuster Delete Window](https://raw.githubusercontent.com/debroglie27/tensorEnv/main/Tkinter_prac/Projects/SE_Lab_Project9/FrontEnd_Images/Adjuster_Delete.png)
-
-**Delete Button:** Deletes the record for which OID was provided.  
-**Back Button:** Takes the User back to *"Adjuster Window"*.
+**Back Button:** Takes the User back to *"Home Window"*.
 
 ---
 ## THE END 
